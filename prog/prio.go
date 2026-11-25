@@ -273,9 +273,32 @@ type ChoiceTable struct {
 	target *Target
 	runs   [][]int32
 	calls  []*Syscall
+
+	templates         []*CompiledCallTemplate
+	templateChance    int
+	templateWeightSum int
+}
+
+// ChoiceTableOptions contains optional generation biases.
+//
+// The zero value preserves the historical ChoiceTable behavior. CallWeight
+// returns a positive relative selection weight for a call; a return value of
+// 1 means the default priority. Templates are deterministic call skeletons
+// that may be inserted at the beginning of a generated program.
+type ChoiceTableOptions struct {
+	CallWeight          func(*Syscall) uint64
+	Templates           []*CompiledCallTemplate
+	TemplateProbability int
 }
 
 func (target *Target) BuildChoiceTable(corpus []*Prog, enabled map[*Syscall]bool) *ChoiceTable {
+	return target.BuildChoiceTableWithOptions(corpus, enabled, ChoiceTableOptions{})
+}
+
+// BuildChoiceTableWithOptions is BuildChoiceTable with optional subsystem
+// weights and call templates.
+func (target *Target) BuildChoiceTableWithOptions(corpus []*Prog, enabled map[*Syscall]bool,
+	opts ChoiceTableOptions) *ChoiceTable {
 	prios, enabledCalls := target.CalculatePriorities(corpus, enabled)
 	var generatableCalls []*Syscall
 	for c := range enabledCalls {
@@ -284,6 +307,9 @@ func (target *Target) BuildChoiceTable(corpus []*Prog, enabled map[*Syscall]bool
 	slices.SortFunc(generatableCalls, func(a, b *Syscall) int {
 		return cmp.Compare(a.ID, b.ID)
 	})
+	if opts.CallWeight != nil {
+		applyChoiceWeights(prios, generatableCalls, opts.CallWeight)
+	}
 	// Looking up in a map is slow, so we create a slice for quick lookup.
 	enabledSlice := make([]bool, len(target.Syscalls))
 	for c := range enabledCalls {
@@ -306,7 +332,69 @@ func (target *Target) BuildChoiceTable(corpus []*Prog, enabled map[*Syscall]bool
 			run[i][j] = sum
 		}
 	}
-	return &ChoiceTable{target, run, generatableCalls}
+	templateChance := opts.TemplateProbability
+	if templateChance < 0 || templateChance > 100 {
+		panic(fmt.Sprintf("template probability must be in [0, 100], got %v", templateChance))
+	}
+	var templates []*CompiledCallTemplate
+	templateWeightSum := 0
+	for _, tmpl := range opts.Templates {
+		if tmpl == nil || len(tmpl.Calls) == 0 {
+			continue
+		}
+		filteredCalls := slices.DeleteFunc(slices.Clone(tmpl.Calls), func(meta *Syscall) bool {
+			return !enabledSlice[meta.ID]
+		})
+		if len(filteredCalls) == 0 {
+			continue
+		}
+		weight := tmpl.Weight
+		if weight <= 0 {
+			weight = 1
+		}
+		copyTemplate := *tmpl
+		copyTemplate.Calls = filteredCalls
+		copyTemplate.Weight = weight
+		templates = append(templates, &copyTemplate)
+		templateWeightSum += weight
+	}
+	if len(templates) == 0 {
+		templateChance = 0
+	}
+	return &ChoiceTable{
+		target:            target,
+		runs:              run,
+		calls:             generatableCalls,
+		templates:         templates,
+		templateChance:    templateChance,
+		templateWeightSum: templateWeightSum,
+	}
+}
+
+func applyChoiceWeights(prios [][]int32, calls []*Syscall, weightFunc func(*Syscall) uint64) {
+	weights := make([]int64, len(prios))
+	for _, meta := range calls {
+		weight := int64(weightFunc(meta))
+		if weight <= 0 {
+			panic(fmt.Sprintf("non-positive choice weight for syscall %v", meta.Name))
+		}
+		weights[meta.ID] = weight
+	}
+	total := int64(10 * len(calls))
+	weighted := make([]int64, len(prios))
+	for i := range prios {
+		var sum int64
+		for j, prio := range prios[i] {
+			weighted[j] = int64(prio) * weights[j]
+			sum += weighted[j]
+		}
+		if sum == 0 {
+			continue
+		}
+		for j := range prios[i] {
+			prios[i][j] = int32(weighted[j] * total / sum)
+		}
+	}
 }
 
 func (ct *ChoiceTable) Generatable(call int) bool {
@@ -335,4 +423,18 @@ func (ct *ChoiceTable) choose(r *rand.Rand, bias int) int {
 		panic("selected disabled or non-generatable syscall")
 	}
 	return res
+}
+
+func (ct *ChoiceTable) maybeTemplate(r *rand.Rand) *CompiledCallTemplate {
+	if ct == nil || ct.templateChance == 0 || r.Intn(100) >= ct.templateChance {
+		return nil
+	}
+	x := r.Intn(ct.templateWeightSum)
+	for _, tmpl := range ct.templates {
+		x -= tmpl.Weight
+		if x < 0 {
+			return tmpl
+		}
+	}
+	return ct.templates[len(ct.templates)-1]
 }

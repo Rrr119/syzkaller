@@ -39,7 +39,7 @@ type btf_opt_name_off int32[0:16]
 # NEED: offset in bpf_prog_t:fd_array. We can't express this, so we just use a small index.
 type map_fd_id int32[0:16]
 
-bpf$MAP_CREATE(cmd const[BPF_MAP_CREATE], arg ptr[in, bpf_map_create_arg], size len[arg]) fd_bpf_map
+bpf$MAP_CREATE(cmd const[BPF_MAP_CREATE], arg ptr[in, bpf_map_create_arg], size len[arg]) fd_bpf_map (subsystem["bpf"])
 bpf$MAP_CREATE_RINGBUF(cmd const[BPF_MAP_CREATE], arg ptr[in, bpf_map_create_arg_ringbuf], size len[arg]) ringbuf_map_fd
 bpf$MAP_CREATE_CONST_STR(cmd const[BPF_MAP_CREATE], arg ptr[in, bpf_map_create_arg_const_str], size len[arg]) fd_bpf_const_str_map
 bpf$MAP_CREATE_TAIL_CALL(cmd const[BPF_MAP_CREATE], arg ptr[in, bpf_map_create_arg_tail_call], size len[arg]) tail_call_map_fd
@@ -49,7 +49,7 @@ bpf$MAP_UPDATE_CONST_STR(cmd const[BPF_MAP_UPDATE_ELEM], arg ptr[inout, bpf_map_
 bpf$MAP_UPDATE_ELEM_TAIL_CALL(cmd const[BPF_MAP_UPDATE_ELEM], arg ptr[inout, bpf_map_update_tail_call_arg], size len[arg])
 bpf$MAP_DELETE_ELEM(cmd const[BPF_MAP_DELETE_ELEM], arg ptr[in, bpf_map_delete_arg], size len[arg])
 bpf$MAP_GET_NEXT_KEY(cmd const[BPF_MAP_GET_NEXT_KEY], arg ptr[in, bpf_map_get_next_arg], size len[arg])
-bpf$PROG_LOAD(cmd const[BPF_PROG_LOAD], arg ptr[in, bpf_prog], size len[arg]) fd_bpf_prog
+bpf$PROG_LOAD(cmd const[BPF_PROG_LOAD], arg ptr[in, bpf_prog], size len[arg]) fd_bpf_prog (subsystem["bpf"])
 bpf$OBJ_PIN_MAP(cmd const[BPF_OBJ_PIN], arg ptr[in, bpf_obj_pin_map], size len[arg])
 bpf$OBJ_PIN_PROG(cmd const[BPF_OBJ_PIN], arg ptr[in, bpf_obj_pin_prog], size len[arg])
 bpf$OBJ_GET_MAP(cmd const[BPF_OBJ_GET], arg ptr[in, bpf_obj_get], size len[arg]) fd_bpf_map

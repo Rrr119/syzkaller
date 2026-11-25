@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/syzkaller/pkg/asset"
 	"github.com/google/syzkaller/pkg/vminfo"
+	"github.com/google/syzkaller/prog"
 )
 
 type Config struct {
@@ -186,6 +187,18 @@ type Config struct {
 	DisabledSyscalls []string `json:"disable_syscalls,omitempty"`
 	// List of syscalls that should not be mutated by the fuzzer (optional).
 	NoMutateSyscalls []string `json:"no_mutate_syscalls,omitempty"`
+	// SubsystemWeights multiplies generation priority for syscalls belonging
+	// to the named kernel subsystems. Names use the MAINTAINERS subsystem
+	// spelling; "_" and "-" are treated equivalently (for example both
+	// io_uring and io-uring work). 1.0 is the default weight.
+	SubsystemWeights map[string]float64 `json:"subsystem_weights,omitempty"`
+	// CallTemplateProbability is the percentage of generated programs that
+	// start with a structured subsystem call template. When subsystem_weights
+	// is set and this field is omitted, a conservative default is used.
+	CallTemplateProbability *int `json:"call_template_probability,omitempty"`
+	// CallTemplates defines additional ordered syscall selector templates.
+	// Selectors may be exact call names or shell-like patterns ending in '*'.
+	CallTemplates []prog.CallTemplate `json:"call_templates,omitempty"`
 	// List of regexps for known bugs.
 	// Don't save reports matching these regexps, but reboot VM after them,
 	// matched against whole report output.

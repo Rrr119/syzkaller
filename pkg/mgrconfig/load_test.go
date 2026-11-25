@@ -114,6 +114,30 @@ func TestCompleteDescriptionsMode(t *testing.T) {
 	require.Contains(t, err.Error(), `invalid descriptions_mode "invalid", must be one of: any, auto, manual`)
 }
 
+func TestCompleteSubsystemGeneration(t *testing.T) {
+	target, err := prog.GetTarget(targets.TestOS, targets.TestArch64)
+	require.NoError(t, err)
+	probability := 40
+	cfg := &Config{
+		SubsystemWeights:        map[string]float64{"io_uring": 4},
+		CallTemplateProbability: &probability,
+		CallTemplates: []prog.CallTemplate{{
+			Name:      "test-template",
+			Selectors: []string{"test$int", "test$opt0"},
+		}},
+	}
+	cfg.Target = target
+	require.NoError(t, cfg.completeSubsystemGeneration())
+	require.Len(t, cfg.CompiledCallTemplates, 1)
+
+	cfg.SubsystemWeights["bad"] = 0
+	require.Error(t, cfg.completeSubsystemGeneration())
+
+	cfg.SubsystemWeights["bad"] = 2
+	cfg.CallTemplates[0].Selectors = []string{"test$missing"}
+	require.Error(t, cfg.completeSubsystemGeneration())
+}
+
 func TestCompleteHTTPPublicURL(t *testing.T) {
 	tests := []struct {
 		name    string

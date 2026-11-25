@@ -108,6 +108,8 @@ Call attributes are:
 	possibly triggering interesting mutations, but also making programs hard to reason about.
 "fsck": the content of the compressed buffer argument for this syscall is a file system and the
 	string argument is a fsck-like command that will be called to verify the filesystem.
+"subsystem[name]": optional kernel subsystem label used by `subsystem_weights` generation settings.
+	Multiple labels can be represented by comma-separated names in the string.
 "remote_cover": wait longer to collect remote coverage for this call.
 "kfuzz_test": the call is a kfuzztest target.
 "snapshot": the call is enabled by default only in snapshot fuzzing mode, but can also be enabled in

@@ -55,6 +55,9 @@ type SyscallAttrs struct {
 	// Filesystem is used in tools/syz-imagegen when fs name cannot be deduced from
 	// the part after $.
 	Filesystem string
+	// Subsystem optionally records a comma-separated kernel subsystem name used
+	// by subsystem-weighted generation. It does not affect program encoding.
+	Subsystem string
 }
 
 // MaxArgs is maximum number of syscall arguments.

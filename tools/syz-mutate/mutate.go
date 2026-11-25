@@ -10,11 +10,13 @@ import (
 	"math/rand"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/google/syzkaller/pkg/db"
 	"github.com/google/syzkaller/pkg/mgrconfig"
+	"github.com/google/syzkaller/pkg/subsystem/genweight"
 	"github.com/google/syzkaller/prog"
 	_ "github.com/google/syzkaller/sys"
 )
@@ -30,6 +32,11 @@ var (
 	flagHintSrc  = flag.Uint64("hint-src", 0, "compared value in the program")
 	flagHintCmp  = flag.Uint64("hint-cmp", 0, "compare operand in the kernel")
 	flagStrict   = flag.Bool("strict", true, "parse input program in strict mode")
+
+	flagSubsystems      = flag.String("subsystems", "", "comma-separated subsystem names, optionally name=weight")
+	flagSubsystemWeight = flag.Float64("subsystem-weight", 8, "default weight for names in -subsystems")
+	flagTemplateChance  = flag.Int("template-probability", genweight.DefaultTemplateProbability,
+		"percentage of generated programs that start with a subsystem template")
 )
 
 func main() {
@@ -67,7 +74,12 @@ func main() {
 		os.Exit(1)
 	}
 	rs := rand.NewSource(seed)
-	ct := target.BuildChoiceTable(corpus, syscalls)
+	generationOpts, err := subsystemGenerationOptions(target)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "%v\n", err)
+		os.Exit(1)
+	}
+	ct := target.BuildChoiceTableWithOptions(corpus, syscalls, generationOpts)
 	var p *prog.Prog
 	if flag.NArg() == 0 {
 		p = target.Generate(rs, *flagLen, ct)
@@ -99,4 +111,29 @@ func main() {
 		}
 	}
 	fmt.Printf("%s\n", p.Serialize())
+}
+
+func subsystemGenerationOptions(target *prog.Target) (prog.ChoiceTableOptions, error) {
+	if strings.TrimSpace(*flagSubsystems) == "" {
+		return prog.ChoiceTableOptions{}, nil
+	}
+	weights := make(map[string]float64)
+	for _, item := range strings.Split(*flagSubsystems, ",") {
+		item = strings.TrimSpace(item)
+		if item == "" {
+			continue
+		}
+		name, value, hasValue := strings.Cut(item, "=")
+		weight := *flagSubsystemWeight
+		if hasValue {
+			parsed, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return prog.ChoiceTableOptions{}, fmt.Errorf("bad subsystem weight %q: %w", item, err)
+			}
+			weight = parsed
+		}
+		weights[name] = weight
+	}
+	probability := *flagTemplateChance
+	return genweight.BuildOptions(target, weights, &probability)
 }

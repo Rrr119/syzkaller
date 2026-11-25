@@ -1,0 +1,127 @@
+{
+  "os": "linux",
+  "arch": "amd64",
+  "programs": 1200,
+  "calls": 16,
+  "seed": 38818,
+  "weight": 8,
+  "subsystems": [
+    {
+      "subsystem": "bpf",
+      "available_calls": 91,
+      "baseline": {
+        "mode": "baseline",
+        "call_coverage": 85.71428571428571,
+        "unique_calls": 78,
+        "unique_subsystem_pairs": 48,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "5963cc42fcf2eac78ebcf65305ea09c429dea999bfa6712a8bb3608f24f5a75f",
+        "reproducible": true
+      },
+      "weighted": {
+        "mode": "subsystem_weights",
+        "call_coverage": 97.8021978021978,
+        "unique_calls": 89,
+        "unique_subsystem_pairs": 346,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "79ad93879df386620ca2b817712163fdfe9f7c954ffa4f4ecdd93c98c8d455fa",
+        "reproducible": true
+      },
+      "weighted_and_templates": {
+        "mode": "weights_and_templates",
+        "call_coverage": 97.8021978021978,
+        "unique_calls": 89,
+        "unique_subsystem_pairs": 775,
+        "template_hits": 431,
+        "repro_seed": 38818,
+        "repro_program_sha256": "ce2d8af137a005bf7fd2687f4d947bb0c78dcc3b9ef9268c93470ce8bb3f6058",
+        "reproducible": true
+      },
+      "weighted_gain_percentage_points": 12.087912087912088,
+      "combined_gain_percentage_points": 12.087912087912088,
+      "weighted_relative_gain_pct": 14.102564102564102,
+      "combined_relative_gain_pct": 14.102564102564102,
+      "corpus_programs": 0
+    },
+    {
+      "subsystem": "io-uring",
+      "available_calls": 83,
+      "baseline": {
+        "mode": "baseline",
+        "call_coverage": 78.3132530120482,
+        "unique_calls": 65,
+        "unique_subsystem_pairs": 6,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "5963cc42fcf2eac78ebcf65305ea09c429dea999bfa6712a8bb3608f24f5a75f",
+        "reproducible": true
+      },
+      "weighted": {
+        "mode": "subsystem_weights",
+        "call_coverage": 98.79518072289157,
+        "unique_calls": 82,
+        "unique_subsystem_pairs": 210,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "3cdddf2af1f875d4304776624c90d4854d4ff2dbc74bd5131a448c51a145d576",
+        "reproducible": true
+      },
+      "weighted_and_templates": {
+        "mode": "weights_and_templates",
+        "call_coverage": 100,
+        "unique_calls": 83,
+        "unique_subsystem_pairs": 519,
+        "template_hits": 434,
+        "repro_seed": 38818,
+        "repro_program_sha256": "1a451fcd5fd5ff03e3ba173f8563fcdb91d6a63989aca8be177408c8570ee741",
+        "reproducible": true
+      },
+      "weighted_gain_percentage_points": 20.48192771084338,
+      "combined_gain_percentage_points": 21.686746987951807,
+      "weighted_relative_gain_pct": 26.15384615384616,
+      "combined_relative_gain_pct": 27.69230769230769,
+      "corpus_programs": 0
+    },
+    {
+      "subsystem": "kvm",
+      "available_calls": 207,
+      "baseline": {
+        "mode": "baseline",
+        "call_coverage": 56.52173913043478,
+        "unique_calls": 117,
+        "unique_subsystem_pairs": 43,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "5963cc42fcf2eac78ebcf65305ea09c429dea999bfa6712a8bb3608f24f5a75f",
+        "reproducible": true
+      },
+      "weighted": {
+        "mode": "subsystem_weights",
+        "call_coverage": 100,
+        "unique_calls": 207,
+        "unique_subsystem_pairs": 562,
+        "template_hits": 0,
+        "repro_seed": 38818,
+        "repro_program_sha256": "0e7c894076ed0fbcca6a7bdb94bfc9d30779dceb3da9c7e3f0540a77531f7832",
+        "reproducible": true
+      },
+      "weighted_and_templates": {
+        "mode": "weights_and_templates",
+        "call_coverage": 100,
+        "unique_calls": 207,
+        "unique_subsystem_pairs": 1221,
+        "template_hits": 434,
+        "repro_seed": 38818,
+        "repro_program_sha256": "ceef06bd38172977ab9dd05ccee6c2c1c42f50a86ed636b2c2f3a5def621b16f",
+        "reproducible": true
+      },
+      "weighted_gain_percentage_points": 43.47826086956522,
+      "combined_gain_percentage_points": 43.47826086956522,
+      "weighted_relative_gain_pct": 76.92307692307693,
+      "combined_relative_gain_pct": 76.92307692307693,
+      "corpus_programs": 0
+    }
+  ]
+}

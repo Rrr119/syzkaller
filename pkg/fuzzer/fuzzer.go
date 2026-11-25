@@ -230,6 +230,8 @@ type Config struct {
 	NewInputFilter func(call string) bool
 	PatchTest      bool
 	ModeKFuzzTest  bool
+	// ChoiceTableOptions contains optional subsystem weights and call templates.
+	ChoiceTableOptions prog.ChoiceTableOptions
 }
 
 func (fuzzer *Fuzzer) triageProgCall(p *prog.Prog, info *flatrpc.CallInfo, call int, triage *map[int]*triageCall) {
@@ -389,7 +391,8 @@ func (fuzzer *Fuzzer) rand() *rand.Rand {
 }
 
 func (fuzzer *Fuzzer) updateChoiceTable(programs []*prog.Prog) {
-	newCt := fuzzer.target.BuildChoiceTable(programs, fuzzer.Config.EnabledCalls)
+	newCt := fuzzer.target.BuildChoiceTableWithOptions(
+		programs, fuzzer.Config.EnabledCalls, fuzzer.Config.ChoiceTableOptions)
 
 	fuzzer.ctMu.Lock()
 	defer fuzzer.ctMu.Unlock()

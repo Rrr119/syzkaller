@@ -48,6 +48,7 @@ import (
 	"github.com/google/syzkaller/pkg/signal"
 	"github.com/google/syzkaller/pkg/stat"
 	"github.com/google/syzkaller/pkg/subsystem"
+	"github.com/google/syzkaller/pkg/subsystem/genweight"
 	"github.com/google/syzkaller/pkg/vminfo"
 	"github.com/google/syzkaller/prog"
 	"github.com/google/syzkaller/sys/targets"
@@ -1159,6 +1160,25 @@ func (mgr *Manager) MachineChecked(features flatrpc.Feature,
 		}
 	}
 
+	generationOpts := prog.ChoiceTableOptions{}
+	if mgr.cfg.TargetOS == targets.Linux && len(mgr.cfg.SubsystemWeights) != 0 {
+		var err error
+		generationOpts, err = genweight.BuildOptions(mgr.target,
+			mgr.cfg.SubsystemWeights, mgr.cfg.CallTemplateProbability)
+		if err != nil {
+			return err
+		}
+	}
+	if len(mgr.cfg.CompiledCallTemplates) != 0 {
+		generationOpts.Templates = append(generationOpts.Templates,
+			mgr.cfg.CompiledCallTemplates...)
+		if mgr.cfg.CallTemplateProbability != nil {
+			generationOpts.TemplateProbability = *mgr.cfg.CallTemplateProbability
+		} else if generationOpts.TemplateProbability == 0 {
+			generationOpts.TemplateProbability = genweight.DefaultTemplateProbability
+		}
+	}
+
 	mgr.mu.Lock()
 	defer mgr.mu.Unlock()
 	if mgr.phase != phaseInit {
@@ -1206,7 +1226,8 @@ func (mgr *Manager) MachineChecked(features flatrpc.Feature,
 				defer mgr.mu.Unlock()
 				return !mgr.saturatedCalls[call]
 			},
-			ModeKFuzzTest: mgr.cfg.Experimental.EnableKFuzzTest,
+			ModeKFuzzTest:      mgr.cfg.Experimental.EnableKFuzzTest,
+			ChoiceTableOptions: generationOpts,
 		}, rnd, mgr.target)
 		fuzzerObj.AddCandidates(candidates)
 		mgr.fuzzer.Store(fuzzerObj)

@@ -15,6 +15,15 @@ func (target *Target) Generate(rs rand.Source, ncalls int, ct *ChoiceTable) *Pro
 	}
 	r := newRand(target, rs)
 	s := newState(target, ct, nil)
+	if tmpl := ct.maybeTemplate(r.Rand); tmpl != nil {
+		for _, meta := range tmpl.Calls {
+			calls := r.generateParticularCall(s, meta)
+			for _, c := range calls {
+				s.analyze(c)
+				p.Calls = append(p.Calls, c)
+			}
+		}
+	}
 	for len(p.Calls) < ncalls {
 		calls := r.generateCall(s, p, len(p.Calls))
 		for _, c := range calls {

@@ -1,0 +1,17 @@
+{
+  "root": "/home/dev/feedback/uid38818",
+  "B": "/home/dev/feedback/uid38818",
+  "sha": "6f2d04a787156dfd6424da23626c562989d5f105",
+  "wslDistro": "Ubuntu-26.04",
+  "source": {
+    "owner": "google",
+    "repo": "syzkaller",
+    "sha": "6f2d04a787156dfd6424da23626c562989d5f105"
+  },
+  "fork": {
+    "owner": "Rrr119",
+    "repo": "syzkaller",
+    "cloneUrl": "https://github.com/Rrr119/syzkaller.git"
+  },
+  "at": "2026-11-25T17:08:13.420Z"
+}

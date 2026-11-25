@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"maps"
+	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -42,6 +43,8 @@ type Derived struct {
 	Syscalls      []int
 	NoMutateCalls map[int]bool // Set of IDs of syscalls which should not be mutated.
 	Timeouts      targets.Timeouts
+	// CompiledCallTemplates are resolved CallTemplates for cfg.Target.
+	CompiledCallTemplates []*prog.CompiledCallTemplate
 
 	// Special debugging/development mode specified by VM type "none".
 	// In this mode syz-manager does not start any VMs, but instead a user is supposed
@@ -217,6 +220,9 @@ func Complete(cfg *Config) error {
 	if err := cfg.completeReproduceOnly(); err != nil {
 		return err
 	}
+	if err := cfg.completeSubsystemGeneration(); err != nil {
+		return err
+	}
 	if err := cfg.completeFocusAreas(); err != nil {
 		return err
 	}
@@ -227,6 +233,27 @@ func Complete(cfg *Config) error {
 		return fmt.Errorf("if config param type is none, reproduce must be false")
 	}
 
+	return nil
+}
+
+func (cfg *Config) completeSubsystemGeneration() error {
+	for name, weight := range cfg.SubsystemWeights {
+		if weight <= 0 || math.IsNaN(weight) || math.IsInf(weight, 0) || weight > 1000 {
+			return fmt.Errorf("bad subsystem_weights[%q]: %v, want a finite number in (0, 1000]",
+				name, weight)
+		}
+	}
+	if cfg.CallTemplateProbability != nil {
+		prob := *cfg.CallTemplateProbability
+		if prob < 0 || prob > 100 {
+			return fmt.Errorf("bad call_template_probability: %v, want [0, 100]", prob)
+		}
+	}
+	compiledTemplates, err := cfg.Target.CompileCallTemplates(cfg.CallTemplates)
+	if err != nil {
+		return fmt.Errorf("bad call_templates: %w", err)
+	}
+	cfg.CompiledCallTemplates = compiledTemplates
 	return nil
 }
 
